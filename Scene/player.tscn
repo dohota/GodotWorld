@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://c8861bqgc7u4x"]
+
+[ext_resource type="Script" uid="uid://b4ryc0bhbhm85" path="res://Asset/player.gd" id="1_kelma"]
+
+[node name="Player" type="Node2D"]
+position = Vector2(80, 71)
+script = ExtResource("1_kelma")
