@@ -1,0 +1,8 @@
+# Windows
+*.exe
+*.obj
+*.pdb
+
+# CLion
+cmake-build-debug/
+.idea/
