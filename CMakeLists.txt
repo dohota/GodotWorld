@@ -5,4 +5,4 @@ set(CMAKE_RC_COMPILER "C:/Program Files (x86)/Windows Kits/10/bin/10.0.26100.0/x
 
 set(CMAKE_CXX_STANDARD 11)
 
-add_executable(MyCraft main.cpp)
+add_executable(MyCraft main.cpp main.c)
