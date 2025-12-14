@@ -1,127 +1,163 @@
 import pygame
-import random
-import math
+class World:
+    def __init__(self):
+        pygame.init()
 
-# =====================
-# 基础配置
-# =====================
-TILE_SIZE = 12
-MAP_W, MAP_H = 50, 50
-SCREEN_W = MAP_W * TILE_SIZE
-SCREEN_H = MAP_H * TILE_SIZE
+        # --- Window / Canvas ---
+        info = pygame.display.Info()
+        self.width = info.current_w
+        self.height = info.current_h
 
-UNIT_RADIUS = 4
-MOVE_RANGE = 2
-ATTACK_RANGE = 5
-DAMAGE = 3
-
-BLUE = (80, 160, 255)
-RED = (220, 80, 80)
-GRID_COLOR = (40, 40, 40)
-BG_COLOR = (20, 20, 20)
-
-# =====================
-# 单位数据（纯数据）
-# =====================
-class Unit:
-    def __init__(self, x, y, team):
-        self.x = x
-        self.y = y
-        self.team = team
-        self.hp = 10
-
-# =====================
-# System：移动
-# =====================
-def movement_system(units):
-    for u in units:
-        dx = random.randint(-MOVE_RANGE, MOVE_RANGE)
-        dy = random.randint(-MOVE_RANGE, MOVE_RANGE)
-        u.x = max(0, min(MAP_W - 1, u.x + dx))
-        u.y = max(0, min(MAP_H - 1, u.y + dy))
-
-# =====================
-# System：战斗
-# =====================
-def combat_system(units):
-    for u in units:
-        for v in units:
-            if u.team == v.team:
-                continue
-            dist = math.hypot(u.x - v.x, u.y - v.y)
-            if dist <= ATTACK_RANGE:
-                v.hp -= DAMAGE
-
-# =====================
-# System：清理死亡单位
-# =====================
-def cleanup_system(units):
-    return [u for u in units if u.hp > 0]
-
-# =====================
-# System：渲染
-# =====================
-def render(screen, units):
-    screen.fill(BG_COLOR)
-
-    # 画网格
-    for x in range(MAP_W):
-        pygame.draw.line(
-            screen, GRID_COLOR,
-            (x * TILE_SIZE, 0),
-            (x * TILE_SIZE, SCREEN_H)
+        self.screen = pygame.display.set_mode(
+            (self.width, self.height),
+            pygame.RESIZABLE
         )
-    for y in range(MAP_H):
-        pygame.draw.line(
-            screen, GRID_COLOR,
-            (0, y * TILE_SIZE),
-            (SCREEN_W, y * TILE_SIZE)
+        pygame.display.set_caption("Warchess")
+
+        # --- Game State ---
+        self.units = []
+        self.currentPlayer = 1
+        self.selectedUnit = None
+        self.validMoves = []
+
+        self.map = {}
+        self.camera = Camera(self.width, self.height)
+        self.renderer = Renderer(self.screen)
+
+        # --- Input System ---
+        self.input = InputSystem(
+            self.screen,
+            self.camera,
+            self.handleInput,
+            self.toggleUI
         )
 
-    # 画单位
-    for u in units:
-        color = BLUE if u.team == 0 else RED
-        px = u.x * TILE_SIZE + TILE_SIZE // 2
-        py = u.y * TILE_SIZE + TILE_SIZE // 2
-        pygame.draw.circle(screen, color, (px, py), UNIT_RADIUS)
+        # --- UI ---
+        self.font = pygame.font.SysFont("Arial", 24)
 
-# =====================
-# 主程序
-# =====================
-def main():
-    pygame.init()
-    screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
-    pygame.display.set_caption("Turn-Based Wargame Demo")
+        self.initMap()
+        self.initUnit()
 
-    clock = pygame.time.Clock()
+        self.clock = pygame.time.Clock()
+        self.running = True
 
-    # 初始化单位
-    units = []
-    for _ in range(10):
-        units.append(Unit(random.randint(0, 10), random.randint(0, MAP_H - 1), 0))
-        units.append(Unit(random.randint(MAP_W - 11, MAP_W - 1), random.randint(0, MAP_H - 1), 1))
+    # ---------------- Map ----------------
+    def initMap(self):
+        start = pygame.time.get_ticks()
 
-    running = True
-    while running:
-        clock.tick(60)
+        for q in range(-CONFIG.MAP_RADIUS, CONFIG.MAP_RADIUS + 1):
+            r1 = max(-CONFIG.MAP_RADIUS, -q - CONFIG.MAP_RADIUS)
+            r2 = min(CONFIG.MAP_RADIUS, -q + CONFIG.MAP_RADIUS)
+            for r in range(r1, r2 + 1):
+                key = HexMath.getKey(q, r)
+                self.map[key] = {"q": q, "r": r}
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    running = False
-                elif event.key == pygame.K_SPACE:
-                    # 一回合结算
-                    movement_system(units)
-                    combat_system(units)
-                    units = cleanup_system(units)
-                    print(f"回合结束，单位数：{len(units)}")
+        end = pygame.time.get_ticks()
+        print(f"MapGen: {end - start} ms")
 
-        render(screen, units)
-        pygame.display.flip()
+    # ---------------- Units ----------------
+    def initUnit(self):
+        for _ in range(1):
+            self.units.append(
+                GameObject(
+                    HexMath.getRandomInt(-100, 100),
+                    HexMath.getRandomInt(-70, 150),
+                    1,
+                    "villager"
+                )
+            )
+            self.units.append(GameObject(1, 2, 1, "king"))
+            self.units.append(GameObject(2, 1, 2, "tank"))
+            self.units.append(GameObject(3, 4, 2, "tank"))
+            self.units.append(GameObject(4, 4, 1, "warrior"))
+            self.units.append(GameObject(3, 3, 1, "defender"))
+            self.units.append(GameObject(3, 5, 1, "rider"))
 
-    pygame.quit()
+    # ---------------- Core Interaction ----------------
+    def handleInput(self, hex_pos):
+        key = HexMath.getKey(hex_pos.q, hex_pos.r)
+        if key not in self.map:
+            return
+
+        clickedUnit = next(
+            (u for u in self.units if u.q == hex_pos.q and u.r == hex_pos.r),
+            None
+        )
+
+        if clickedUnit and clickedUnit.owner == self.currentPlayer:
+            self.selectedUnit = clickedUnit
+            self.calculateValidMoves(clickedUnit)
+
+        elif self.selectedUnit and not clickedUnit:
+            self.tryMove(hex_pos)
+
+    def calculateValidMoves(self, unit):
+        self.validMoves = []
+
+        for tile in self.map.values():
+            dist = HexMath.getDistance(unit, tile)
+            if dist <= unit.move and dist > 0:
+                isOccupied = any(
+                    u.q == tile["q"] and u.r == tile["r"]
+                    for u in self.units
+                )
+                if not isOccupied:
+                    self.validMoves.append(tile)
+
+    def tryMove(self, targetHex):
+        isValid = any(
+            m["q"] == targetHex.q and m["r"] == targetHex.r
+            for m in self.validMoves
+        )
+
+        if isValid:
+            self.selectedUnit.q = targetHex.q
+            self.selectedUnit.r = targetHex.r
+            self.selectedUnit = None
+            self.validMoves = []
+            self.switchTurn()
+        else:
+            self.selectedUnit = None
+            self.validMoves = []
+
+    def switchTurn(self):
+        self.currentPlayer = 2 if self.currentPlayer == 1 else 1
+
+    def drawTurnText(self):
+        text = "红方回合" if self.currentPlayer == 1 else "蓝方回合"
+        color = CONFIG.COLORS.P1 if self.currentPlayer == 1 else CONFIG.COLORS.P2
+
+        surface = self.font.render(text, True, color)
+        self.screen.blit(surface, (20, 20))
+
+    def toggleUI(self):
+        print("Toggle UI (placeholder)")
+
+    def update(self):
+        while self.running:
+            self.clock.tick(60)
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
+
+                elif event.type == pygame.VIDEORESIZE:
+                    self.width, self.height = event.size
+                    self.screen = pygame.display.set_mode(
+                        (self.width, self.height),
+                        pygame.RESIZABLE
+                    )
+                    self.camera.resize(self.width, self.height)
+
+                self.input.handle_event(event)
+
+            self.renderer.render(self, self.camera)
+            self.drawTurnText()
+
+            pygame.display.flip()
+
+        pygame.quit()
 
 if __name__ == "__main__":
-    main()
+    w = World()
+    w.update()
