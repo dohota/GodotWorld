@@ -23,8 +23,6 @@ class World:
         self.map = {}
         self.camera = CameraComponent(self.width, self.height)
         self.renderer = RendererSystem(self.screen)
-
-        # --- Input System ---
         self.input = InputSystem(
             self.screen,
             self.camera,
