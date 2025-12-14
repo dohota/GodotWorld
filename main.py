@@ -21,8 +21,8 @@ class World:
         self.validMoves = []
 
         self.map = {}
-        self.camera = Camera(self.width, self.height)
-        self.renderer = Renderer(self.screen)
+        self.camera = CameraComponent(self.width, self.height)
+        self.renderer = RendererSystem(self.screen)
 
         # --- Input System ---
         self.input = InputSystem(
