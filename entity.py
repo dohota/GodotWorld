@@ -31,6 +31,19 @@ class Entity:
             eid for eid in base
             if all(eid in s for s in stores)
         ]
+    
+class UnitFactory:
+    def __init__(self, world):
+        self.world = world
 
-class Chess:
-    pass
+    def create_villager(self, q, r, owner):
+        eid = self.world.createEntity()
+        self.world.add_component(eid, PositionComponent, {"q": q, "r": r})
+        self.world.add_component(eid, CombatComponent, {"hp": 5, "owner": owner})
+        self.world.add_component(eid, RenderComponent, {"sprite": "villager"})
+        return eid
+    
+# 地图作为一个整体实体，挂一个 TileMapComponent
+class MapFactory:
+    def __init__(self):
+        pass
