@@ -1,8 +1,7 @@
 import pygame
-class World:
+class Manager:
     def __init__(self):
         pygame.init()
-
         # --- Window / Canvas ---
         info = pygame.display.Info()
         self.width = info.current_w
@@ -134,11 +133,9 @@ class World:
     def update(self):
         while self.running:
             self.clock.tick(60)
-
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
-
                 elif event.type == pygame.VIDEORESIZE:
                     self.width, self.height = event.size
                     self.screen = pygame.display.set_mode(
@@ -146,16 +143,33 @@ class World:
                         pygame.RESIZABLE
                     )
                     self.camera.resize(self.width, self.height)
-
                 self.input.handle_event(event)
-
             self.renderer.render(self, self.camera)
             self.drawTurnText()
-
             pygame.display.flip()
-
         pygame.quit()
 
 if __name__ == "__main__":
-    w = World()
-    w.update()
+    m = Manager()
+    m.update()
+
+# pygame.init()
+# screen = pygame.display.set_mode((800, 600))
+# clock = pygame.time.Clock()
+
+# world = World()
+# world.add_system(RenderSystem(screen))
+
+# factory = UnitFactory(world)
+# factory.create_unit(0, 0, (200, 50, 50))
+# factory.create_unit(2, -1, (50, 50, 200))
+
+# running = True
+# while running:
+#     dt = clock.tick(60) / 1000
+
+#     for event in pygame.event.get():
+#         if event.type == pygame.QUIT:
+#             running = False
+#     world.update(dt)
+# pygame.quit()
