@@ -1,20 +1,28 @@
 import pygame
-# 输入系统: 处理鼠标交互，区分拖拽和点击
+# class InputSystem:
+#     def __init__(self):
+#         self.selected_entity = None
+
+#     def handle_event(self, event):
+#         if event.type == MOUSEBUTTONDOWN:
+#             self.handle_click(event.pos)
+
+#     def handle_click(self, pos):
+#         # 屏幕 → 地图 → hex
+#         # 决定是选中单位 / 移动 / 攻击
+#         self.world.get_system(TurnSystem).handle_action(...)
 class InputSystem:
     def __init__(self, screen, camera, onClickCallback, onKeyCallback):
         self.screen = screen
         self.camera = camera
         self.onClick = onClickCallback
         self.onKey = onKeyCallback
-
         self.state = {
             "isDragging": False,
             "hasMoved": False,
             "startX": 0,
             "startY": 0
         }
-
-    # 等价于 JS 的事件回调系统
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:  # 左键

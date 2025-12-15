@@ -21,15 +21,16 @@ class CameraComponent:
         }
 
     # 屏幕坐标 -> Hex网格坐标 (加入 zoom 除法)
-    def screenToHex(self, screenX, screenY):
+    def screenToHex(self, screenX, screenY, hex_size):
         # 逆运算：先减去中心，除以缩放，再加上摄像机位置
         worldX = (screenX - self.width / 2) / self.zoom + self.x
         worldY = (screenY - self.height / 2) / self.zoom + self.y
-
-        q = (2 / 3 * worldX) / CONFIG.HEX_SIZE
-        r = (-1 / 3 * worldX + math.sqrt(3) / 3 * worldY) / CONFIG.HEX_SIZE
-
-        return HexMath.hexRound(q, r)
+        q = (2 / 3 * worldX) / hex_size
+        r = (-1 / 3 * worldX + math.sqrt(3) / 3 * worldY) / hex_size
+        return {
+            "x": hex_size * (3/2 * q),
+            "y": hex_size * (math.sqrt(3)/2 * q + math.sqrt(3) * r)
+        }
 
     # 移动摄像机
     def pan(self, dx, dy):

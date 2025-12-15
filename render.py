@@ -16,15 +16,8 @@ class RenderersSystem:
             px = x + size * math.cos(angle_rad)
             py = y + size * math.sin(angle_rad)
             points.append((px, py))
-        # 填充
-        pygame.draw.polygon(self.screen, color, points)
-        # 描边
-        pygame.draw.polygon(
-            self.screen,
-            strokeColor,
-            points,
-            width=int(max(1, lineWidth))
-        )
+        pygame.draw.polygon(self.screen, color, points) # 填充
+        pygame.draw.polygon(self.screen, strokeColor, points, width=int(max(1, lineWidth))) # 描边
 
     def drawUnit(self, x, y, unit, zoom):
         # 阵营边框颜色
