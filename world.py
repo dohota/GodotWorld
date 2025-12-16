@@ -32,3 +32,6 @@ class World:
             if all(eid in s for s in stores)
         ]
     
+    def update(self):
+        for i in self.systems:
+            i.update()

@@ -4,6 +4,7 @@ from render import *
 from turn import *
 from entity import *
 from input import *
+from system import *
 class Manager:
     def __init__(self):
         pygame.init()
@@ -18,15 +19,16 @@ class Manager:
         self.clock = pygame.time.Clock()
         self.running = True
         self.font = pygame.font.SysFont("Arial", 24)
-
         self.world = World()
         self.world.add_system(RenderSystem(self.screen))
         self.world.add_system(InputSystem(self.screen, self.camera, self.handleInput, self.toggleUI))
         self.world.add_system(TurnSystem(self.world))
-        factory = EntityFactory(self.world)
-        factory.create("unit",[10,10,20])
-        factory.create("unit",[0,0,2])
-        factory.create("camera",[2,5])
+        self.world.add_system(MoveSystem(self.world))
+        self.world.add_system(CombatSystem(self.world))
+        self.factory = EntityFactory(self.world)
+        self.factory.create("unit",[10,10,"unit"])
+        self.factory.create("unit",[0,0,"unit"])
+        self.factory.create("camera",[2,5])
 
     def initMap(self):
         for q in range(-CONFIG.MAP_RADIUS, CONFIG.MAP_RADIUS + 1):
@@ -84,9 +86,6 @@ class Manager:
 
         surface = self.font.render(text, True, color)
         self.screen.blit(surface, (20, 20))
-
-    def toggleUI(self):
-        print("Toggle UI (placeholder)")
 
     def update(self):
         while self.running:
