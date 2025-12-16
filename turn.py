@@ -1,21 +1,62 @@
+from dataclasses import dataclass
+# 存“每一步做了什么“
+@dataclass (slots=True)
+class Action:
+    entity: int
+    from_q: int
+    from_r: int
+    to_q: int
+    to_r: int
+# 树状历史结构 的一个节点 
+class TurnNode:
+    def __init__(self, action=None, parent=None):
+        self.action = action
+        self.parent = parent
+        self.children = []
+
 class TurnSystem:
     def __init__(self, world):
         self.world = world
-        self.history = []  # 存储回合快照
-        self.currentTurn = 0
+        self.root = TurnNode()
+        self.current_node = self.root
+        self.current_player = 1
+    # 提交
+    def commit_action(self, action):
+        node = TurnNode(action, parent=self.current_node)
+        self.current_node.children.append(node)
+        self.apply(action)
+        self.current_node = node
+        self.advance_turn()
+    # 回退
+    def undo(self):
+        if self.current_node.parent is None:
+            return
+        self.undo_action(self.current_node.action)
+        self.current_node = self.current_node.parent
+        self.rewind_turn()
+    # 分枝跳转
+    def goto(self, node):
+        # 1. 回到最近公共祖先
+        lca = find_lca(self.current_node, node)
+        while self.current_node != lca:
+            self.undo()
+        # 2. 重做到目标节点
+        path = build_path(lca, node)
+        for n in path:
+            self.apply(n.action)
+            self.current_node = n
 
-    def save_state(self):
-        snapshot = {}  # 可以存所有单位状态，或者整个世界状态
-        for entity in self.world.entities:
-            pos = self.world.get_component(entity, PositionComponent)
-            combat = self.world.get_component(entity, CombatComponent)
-            snapshot[entity] = (pos.q, pos.r, combat.hp)
-        self.history.append(snapshot)
+    def apply(self, action):
+        pos = self.world.get_component(action.entity, Position)
+        pos.q = action.to_q
+        pos.r = action.to_r
 
-    def undo_turn(self, turn_index):
-        snapshot = self.history[turn_index]
-        for entity, state in snapshot.items():
-            pos = self.world.get_component(entity, PositionComponent)
-            combat = self.world.get_component(entity, CombatComponent)
-            pos.q, pos.r, combat.hp = state
-        self.currentTurn = turn_index
+    def undo_action(self, action):
+        pos = self.world.get_component(action.entity, Position)
+        pos.q = action.from_q
+        pos.r = action.from_r
+    
+    # 保存整个游戏树
+    # 或者对关键节点进行快照
+    def save_game(self):
+        pass

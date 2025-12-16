@@ -1,47 +1,38 @@
 import pygame
+from world import *
+from render import *
+from camera import *
+from entity import *
+from input import *
 class Manager:
     def __init__(self):
         pygame.init()
-        # --- Window / Canvas ---
         info = pygame.display.Info()
         self.width = info.current_w
         self.height = info.current_h
-
         self.screen = pygame.display.set_mode(
             (self.width, self.height),
             pygame.RESIZABLE
         )
         pygame.display.set_caption("Warchess")
+        self.clock = pygame.time.Clock()
+        self.running = True
+        self.font = pygame.font.SysFont("Arial", 24)
 
-        # --- Game State ---
-        self.units = []
-        self.currentPlayer = 1
-        self.selectedUnit = None
-        self.validMoves = []
-
-        self.map = {}
-        self.camera = CameraComponent(self.width, self.height)
-        self.renderer = RendererSystem(self.screen)
-        self.input = InputSystem(
+        self.world = World()
+        self.world.add_system(RenderSystem(self.screen))
+        self.world.add_system(InputSystem(
             self.screen,
             self.camera,
             self.handleInput,
             self.toggleUI
-        )
-
-        # --- UI ---
-        self.font = pygame.font.SysFont("Arial", 24)
-
-        self.initMap()
-        self.initUnit()
-
-        self.clock = pygame.time.Clock()
-        self.running = True
-
-    # ---------------- Map ----------------
+        ))
+        factory = EntityFactory(world)
+        factory.create_unit(0, 0, (200, 50, 50))
+        factory.create_unit(2, -1, (50, 50, 200))
+        self.camera = CameraComponent(self.width, self.height)
+  
     def initMap(self):
-        start = pygame.time.get_ticks()
-
         for q in range(-CONFIG.MAP_RADIUS, CONFIG.MAP_RADIUS + 1):
             r1 = max(-CONFIG.MAP_RADIUS, -q - CONFIG.MAP_RADIUS)
             r2 = min(CONFIG.MAP_RADIUS, -q + CONFIG.MAP_RADIUS)
@@ -49,28 +40,6 @@ class Manager:
                 key = HexMath.getKey(q, r)
                 self.map[key] = {"q": q, "r": r}
 
-        end = pygame.time.get_ticks()
-        print(f"MapGen: {end - start} ms")
-
-    # ---------------- Units ----------------
-    def initUnit(self):
-        for _ in range(1):
-            self.units.append(
-                GameObject(
-                    HexMath.getRandomInt(-100, 100),
-                    HexMath.getRandomInt(-70, 150),
-                    1,
-                    "villager"
-                )
-            )
-            self.units.append(GameObject(1, 2, 1, "king"))
-            self.units.append(GameObject(2, 1, 2, "tank"))
-            self.units.append(GameObject(3, 4, 2, "tank"))
-            self.units.append(GameObject(4, 4, 1, "warrior"))
-            self.units.append(GameObject(3, 3, 1, "defender"))
-            self.units.append(GameObject(3, 5, 1, "rider"))
-
-    # ---------------- Core Interaction ----------------
     def handleInput(self, hex_pos):
         key = HexMath.getKey(hex_pos.q, hex_pos.r)
         if key not in self.map:
@@ -132,10 +101,10 @@ class Manager:
 
     def update(self):
         while self.running:
-            self.clock.tick(60)
+            dt = self.clock.tick(60) / 1000
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    self.running = False
+                    running = False
                 elif event.type == pygame.VIDEORESIZE:
                     self.width, self.height = event.size
                     self.screen = pygame.display.set_mode(
@@ -144,32 +113,10 @@ class Manager:
                     )
                     self.camera.resize(self.width, self.height)
                 self.input.handle_event(event)
-            self.renderer.render(self, self.camera)
-            self.drawTurnText()
-            pygame.display.flip()
+                # self.renderer.render(self, self.camera)
+            self.world.update(dt)
         pygame.quit()
 
 if __name__ == "__main__":
     m = Manager()
     m.update()
-
-# pygame.init()
-# screen = pygame.display.set_mode((800, 600))
-# clock = pygame.time.Clock()
-
-# world = World()
-# world.add_system(RenderSystem(screen))
-
-# factory = UnitFactory(world)
-# factory.create_unit(0, 0, (200, 50, 50))
-# factory.create_unit(2, -1, (50, 50, 200))
-
-# running = True
-# while running:
-#     dt = clock.tick(60) / 1000
-
-#     for event in pygame.event.get():
-#         if event.type == pygame.QUIT:
-#             running = False
-#     world.update(dt)
-# pygame.quit()

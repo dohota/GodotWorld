@@ -1,12 +1,52 @@
 import math
 import pygame
-class RenderersSystem:
+# class RenderSystem:
+#     def __init__(self, screen, camera):
+#         self.screen = screen
+#         self.camera = camera
+
+#     def update(self, dt):
+#         self.screen.fill((30, 30, 30))
+
+#         entities = self.world.query(Position, Renderable)
+
+#         # layer 排序
+#         entities.sort(key=lambda e: self.world.get_component(e, Renderable).layer)
+#         for eid in entities:
+#             pos = self.world.get_component(eid, Position)
+#             ren = self.world.get_component(eid, Renderable)
+
+#             if not ren.visible:
+#                 continue
+#             x, y = self.world_to_screen(pos)
+#             pygame.draw.circle(self.screen, ren.color, (x, y), ren.radius)
+#         pygame.display.flip()
+
+#     def world_to_screen(self, pos):
+#         x = pos.q * 60 - self.camera.x
+#         y = pos.r * 52 - self.camera.y
+#         return int(x), int(y)
+class RenderSystem:
     def __init__(self, screen):
         self.screen = screen
         self.debugInfo = None  # JS 中是 DOM，这里保留接口含义
 
     def clear(self):
         self.screen.fill((0,0,0))
+
+    def update(self, dt):
+        self.screen.fill((30, 30, 30))
+        entities = self.world.query(Position, Renderable)
+        # layer 排序
+        entities.sort(key=lambda e: self.world.get_component(e, Renderable).layer)
+        for eid in entities:
+            pos = self.world.get_component(eid, Position)
+            ren = self.world.get_component(eid, Renderable)
+            if not ren.visible:
+                continue
+            x, y = self.world_to_screen(pos)
+            pygame.draw.circle(self.screen, ren.color, (x, y), ren.radius)
+        pygame.display.flip()
 
     def drawHexagon(self, x, y, size, color, strokeColor, lineWidth=1):
         points = []

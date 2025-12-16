@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 # 加上@dataclass (slots=True)，则等同于如下代码
 # class Position:
-#     def __init__(self, q, r):
+#     def __init__(self, q:int, r:int):
 #         self.q = q
 #         self.r = r
 
@@ -28,16 +28,16 @@ class MapPositionComponent:
 
 @dataclass(slots=True)
 class RenderComponent:
+    layer: int = 0
+    visible: bool = True
     border_color: str
     fill_color: str
     size: float
-    name: str    
+    mark_name: str = ""    
 
 @dataclass(slots=True)
 class CombatComponent:
-    def __init__(self, hp: int, attack: int, defense: int, move: int):
-        self.hp = hp
-        self.attack = attack
-        self.defense = defense
-        self.move = move 
-                
+    hp: int
+    attack: int
+    defence: int
+    move: int
