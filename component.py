@@ -24,11 +24,11 @@ class ScreenPositionComponent: # 只有ui没有实际位置，只有固定的在
 @dataclass(slots=True)
 class RenderComponent:
     name: str 
-    layer: int = 0
+    layer: int = 1
     visible: bool = True
-    border_color: str
-    fill_color: str
-    size: float
+    border_color: str = ""
+    fill_color: str = ""
+    size: float = 2
 
 @dataclass(slots=True)
 class CombatComponent:

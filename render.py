@@ -9,16 +9,34 @@ class RenderSystem:
     def update(self):
         self.screen.fill((30, 30, 30)) # clear
         entities = self.world.query(WorldPositionComponent, RenderComponent)
+        ui = self.world.query(ScreenPositionComponent, RenderComponent)
+        thing = entities + ui
         # layer 排序
-        entities.sort(key=lambda e: self.world.get_component(e, RenderComponent).layer)
-        for eid in entities:
+        thing.sort(key=lambda e: self.world.get_component(e, RenderComponent).layer)
+        for eid in thing:
             pos = self.world.get_component(eid, WorldPositionComponent)
+            ui_pos = self.world.get_component(eid, ScreenPositionComponent)
             ren = self.world.get_component(eid, RenderComponent)
             if not ren.visible:
                 continue
-            x, y = self.world_to_screen(pos)
-            pygame.draw.circle(self.screen, ren.color, (x, y), ren.radius)
+            if pos:
+                x, y = self.world_to_screen(pos)
+                self.draw(ren, x, y)
+            if ui_pos:
+                self.draw(ren, ui_pos.x, ui_pos.y)
         pygame.display.flip()
+
+    def draw(self, r, x, y):
+        if r.name == "unit":
+            pygame.draw.rect(self.screen, (0, 0, 255), (50, 100, 200, 80))
+        elif r.name == "hex":
+            pass
+        elif r.name == "map": # 地图作为一个整体实体，挂一个 TileMapComponent
+            pass
+        elif r.name == "ui":
+            pygame.draw.rect(self.screen, (0, 0, 255), (50, 100, 200, 80))
+        else:
+            pass
 
     def drawHexagon(self, x, y, size, color, strokeColor, lineWidth=1):
         points = []

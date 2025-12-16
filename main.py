@@ -11,10 +11,7 @@ class Manager:
         info = pygame.display.Info()
         self.width = info.current_w
         self.height = info.current_h
-        self.screen = pygame.display.set_mode(
-            (self.width, self.height),
-            pygame.RESIZABLE
-        )
+        self.screen = pygame.display.set_mode((self.width, self.height), pygame.RESIZABLE)
         pygame.display.set_caption("Warchess")
         self.clock = pygame.time.Clock()
         self.running = True
@@ -26,9 +23,9 @@ class Manager:
         self.world.add_system(MoveSystem(self.world))
         self.world.add_system(CombatSystem(self.world))
         self.factory = EntityFactory(self.world)
-        self.factory.create("unit",[10,10,"unit"])
-        self.factory.create("unit",[0,0,"unit"])
-        self.factory.create("camera",[2,5])
+        self.u1 = self.factory.create("unit",[10,10,"unit"])
+        self.u2 = self.factory.create("unit",[0,0,"unit"])
+        self.camera = self.factory.create("camera",[2,5])
 
     def initMap(self):
         for q in range(-CONFIG.MAP_RADIUS, CONFIG.MAP_RADIUS + 1):
@@ -99,9 +96,8 @@ class Manager:
                         (self.width, self.height),
                         pygame.RESIZABLE
                     )
-                    #self.camera.resize(self.width, self.height)
-                #self.input.handle_event(event)
-                # self.renderer.render(self, self.camera)
+                    self.camera.resize(self.width, self.height)
+                self.input.handle_event(event)
             self.world.update(dt)
         pygame.quit()
 
