@@ -1,24 +1,26 @@
+from component import *
+
 class EntityFactory:
     def __init__(self, world):
         self.world = world
 
-    def create_unit(self, q, r, color):
+    def create(self, name, a):
         eid = self.world.create_entity()
-        self.world.add_component(eid, Position(q, r))
-        self.world.add_component(eid, Renderable(color))
-        self.world.add_component(eid, Combat(10, 3, 4))
-        return eid
-    
-    # 地图作为一个整体实体，挂一个 TileMapComponent
-    def create_map(self, q, r, color):
-        eid = self.world.create_entity()
-        self.world.add_component(eid, Position(q, r))
-        self.world.add_component(eid, Renderable(color))
-        return eid
-    
-    def create_ui(self, x, y, color):
-        eid = self.world.create_entity()
-        self.world.add_component(eid, Position(x, y))
-        self.world.add_component(eid, Renderable(color))
+        if name == "unit":
+            self.world.add_component(eid, WorldPositionComponent(a[0], a[1]))
+            self.world.add_component(eid, RenderComponent(a[2]))
+            self.world.add_component(eid, CombatComponent(10, 3, 4))
+        elif name == "hex":
+            pass
+        elif name == "map": # 地图作为一个整体实体，挂一个 TileMapComponent
+            self.world.add_component(eid, TileMapComponent(a[0], a[1]))
+            self.world.add_component(eid, RenderComponent(a[2]))
+        elif name == "camera":
+            self.world.add_component(eid, CameraComponent(a[0], a[1]))
+        elif name == "ui":
+            self.world.add_component(eid, ScreenPositionComponent(a[0], a[1]))
+            self.world.add_component(eid, RenderComponent(a[2]))
+        else:
+            pass
         return eid
     

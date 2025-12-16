@@ -1,7 +1,7 @@
 import pygame
 from world import *
 from render import *
-from camera import *
+from turn import *
 from entity import *
 from input import *
 class Manager:
@@ -21,17 +21,13 @@ class Manager:
 
         self.world = World()
         self.world.add_system(RenderSystem(self.screen))
-        self.world.add_system(InputSystem(
-            self.screen,
-            self.camera,
-            self.handleInput,
-            self.toggleUI
-        ))
-        factory = EntityFactory(world)
-        factory.create_unit(0, 0, (200, 50, 50))
-        factory.create_unit(2, -1, (50, 50, 200))
-        self.camera = CameraComponent(self.width, self.height)
-  
+        self.world.add_system(InputSystem(self.screen, self.camera, self.handleInput, self.toggleUI))
+        self.world.add_system(TurnSystem(self.world))
+        factory = EntityFactory(self.world)
+        factory.create("unit",[10,10,20])
+        factory.create("unit",[0,0,2])
+        factory.create("camera",[2,5])
+
     def initMap(self):
         for q in range(-CONFIG.MAP_RADIUS, CONFIG.MAP_RADIUS + 1):
             r1 = max(-CONFIG.MAP_RADIUS, -q - CONFIG.MAP_RADIUS)
@@ -44,22 +40,15 @@ class Manager:
         key = HexMath.getKey(hex_pos.q, hex_pos.r)
         if key not in self.map:
             return
-
-        clickedUnit = next(
-            (u for u in self.units if u.q == hex_pos.q and u.r == hex_pos.r),
-            None
-        )
-
+        clickedUnit = next((u for u in self.units if u.q == hex_pos.q and u.r == hex_pos.r), None)
         if clickedUnit and clickedUnit.owner == self.currentPlayer:
             self.selectedUnit = clickedUnit
             self.calculateValidMoves(clickedUnit)
-
         elif self.selectedUnit and not clickedUnit:
             self.tryMove(hex_pos)
 
     def calculateValidMoves(self, unit):
         self.validMoves = []
-
         for tile in self.map.values():
             dist = HexMath.getDistance(unit, tile)
             if dist <= unit.move and dist > 0:
@@ -104,15 +93,15 @@ class Manager:
             dt = self.clock.tick(60) / 1000
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    running = False
+                    self.running = False
                 elif event.type == pygame.VIDEORESIZE:
                     self.width, self.height = event.size
                     self.screen = pygame.display.set_mode(
                         (self.width, self.height),
                         pygame.RESIZABLE
                     )
-                    self.camera.resize(self.width, self.height)
-                self.input.handle_event(event)
+                    #self.camera.resize(self.width, self.height)
+                #self.input.handle_event(event)
                 # self.renderer.render(self, self.camera)
             self.world.update(dt)
         pygame.quit()
