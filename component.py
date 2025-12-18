@@ -51,7 +51,9 @@ class CameraComponent:
 class TileMapComponent:
     q: int
     r: int
-    type: str # 应该为str数组
+    size: int = 30
+    radius: int = 40
+    type: str = ""# 应该为str数组
     name: str = "hex" # 六角格地图
 
 @dataclass(slots=True)

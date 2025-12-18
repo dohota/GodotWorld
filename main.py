@@ -22,18 +22,11 @@ class Manager:
         self.world.add_system(TurnSystem(self.world))
         self.world.add_system(MoveSystem(self.world))
         self.world.add_system(CombatSystem(self.world))
+        self.world.add_system(MapSystem(self.world))
         self.factory = EntityFactory(self.world)
         self.u1 = self.factory.create("unit",[10,10,"unit"])
         self.u2 = self.factory.create("unit",[0,0,"unit"])
         self.camera = self.factory.create("camera",[2,5])
-
-    def initMap(self):
-        for q in range(-CONFIG.MAP_RADIUS, CONFIG.MAP_RADIUS + 1):
-            r1 = max(-CONFIG.MAP_RADIUS, -q - CONFIG.MAP_RADIUS)
-            r2 = min(CONFIG.MAP_RADIUS, -q + CONFIG.MAP_RADIUS)
-            for r in range(r1, r2 + 1):
-                key = HexMath.getKey(q, r)
-                self.map[key] = {"q": q, "r": r}
 
     def handleInput(self, hex_pos):
         key = HexMath.getKey(hex_pos.q, hex_pos.r)
@@ -63,7 +56,6 @@ class Manager:
             m["q"] == targetHex.q and m["r"] == targetHex.r
             for m in self.validMoves
         )
-
         if isValid:
             self.selectedUnit.q = targetHex.q
             self.selectedUnit.r = targetHex.r
@@ -73,16 +65,6 @@ class Manager:
         else:
             self.selectedUnit = None
             self.validMoves = []
-
-    def switchTurn(self):
-        self.currentPlayer = 2 if self.currentPlayer == 1 else 1
-
-    def drawTurnText(self):
-        text = "红方回合" if self.currentPlayer == 1 else "蓝方回合"
-        color = CONFIG.COLORS.P1 if self.currentPlayer == 1 else CONFIG.COLORS.P2
-
-        surface = self.font.render(text, True, color)
-        self.screen.blit(surface, (20, 20))
 
     def update(self):
         while self.running:

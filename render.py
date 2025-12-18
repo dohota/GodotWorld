@@ -8,6 +8,14 @@ class RenderSystem:
 
     def update(self):
         self.screen.fill((30, 30, 30)) # clear
+        #     # --- 视锥剔除边界 ---
+    #     padding = CONFIG.HEX_SIZE * 2 * camera.zoom
+    #     viewBounds = {
+    #         "left": -padding,
+    #         "top": -padding,
+    #         "right": self.screen.get_width() + padding,
+    #         "bottom": self.screen.get_height() + padding
+    #     }
         entities = self.world.query(WorldPositionComponent, RenderComponent)
         ui = self.world.query(ScreenPositionComponent, RenderComponent)
         thing = entities + ui
@@ -32,7 +40,26 @@ class RenderSystem:
         elif r.name == "hex":
             pass
         elif r.name == "map": # 地图作为一个整体实体，挂一个 TileMapComponent
-            pass
+            for tile in game.map:
+                worldPos = HexMath.hexToWorld(tile.q, tile.r)
+                screenPos = camera.worldToScreen(worldPos["x"], worldPos["y"])
+                # Culling
+                if (screenPos["x"] < viewBounds["left"] or
+                    screenPos["x"] > viewBounds["right"] or
+                    screenPos["y"] < viewBounds["top"] or
+                    screenPos["y"] > viewBounds["bottom"]):
+                    continue
+                renderedCount += 1
+                color = CONFIG.COLORS.TILE
+                if any(m.q == tile.q and m.r == tile.r for m in game.validMoves):
+                    color = CONFIG.COLORS.MOVE_HINT
+                self.drawHexagon(
+                    screenPos["x"],
+                    screenPos["y"],
+                    hexRadius,
+                    color,
+                    CONFIG.COLORS.TILE_STROKE
+                )
         elif r.name == "ui":
             pygame.draw.rect(self.screen, (0, 0, 255), (50, 100, 200, 80))
         else:
@@ -51,8 +78,8 @@ class RenderSystem:
 
     def drawUnit(self, x, y, unit, zoom):
         # 阵营边框颜色
-        teamColor = CONFIG.COLORS.P1 if unit.owner == 1 else CONFIG.COLORS.P2
-        radius = CONFIG.HEX_SIZE * 0.6 * zoom
+        teamColor = COLORS.P1 if unit.owner == 1 else COLORS.P2
+        radius = HEX_SIZE * 0.6 * zoom
         # 单位主体
         pygame.draw.circle(
             self.screen,
@@ -91,7 +118,7 @@ class RenderSystem:
     #     # --- 缓存缩放后的尺寸 ---
     #     hexRadius = (CONFIG.HEX_SIZE - 2) * camera.zoom
     #     selectRadius = (CONFIG.HEX_SIZE + 2) * camera.zoom
-    #     renderedCount = 0
+    
     #     # --- 绘制地图 ---
     #     for tile in game.map:
     #         worldPos = HexMath.hexToWorld(tile.q, tile.r)
