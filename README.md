@@ -5,4 +5,4 @@
 pygame+opengl+pyopenal（使用复杂，可以先就用pygame原生声音模块）+asyncio+uvloop +numpy（储存大量方块，性能很好）
 除了chunk，部分底层渲染之外，基本按照ecs架构
 
-v1.0:
+v1.1:

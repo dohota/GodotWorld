@@ -4,12 +4,10 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 import numpy as np
 import math
-
 # ---- 世界配置 ----
 world_size = (16, 8, 16)  # x, y, z
 world = np.zeros(world_size, dtype=int)
 world[:, :4, :] = 1  # 地面层填充
-
 # ---- 方块渲染 ----
 def draw_cube(x, y, z):
     vertices = [
@@ -77,7 +75,6 @@ class Camera:
         glRotatef(-self.pitch, 1, 0, 0)
         glRotatef(-self.yaw, 0, 1, 0)
         glTranslatef(-self.pos[0], -self.pos[1], -self.pos[2])
-
 # ---- 初始化 Pygame + OpenGL ----
 pygame.init()
 display = (800, 600)
@@ -90,11 +87,7 @@ pygame.mouse.set_visible(False)
 pygame.event.set_grab(True)
 
 camera = Camera(pos=(8,6,20), yaw=180, pitch=0)
-
-
 clock = pygame.time.Clock()
-
-# ---- 游戏主循环 ----
 while True:
     dt = clock.tick(60)
     glClearColor(0.5, 0.7, 1.0, 1.0)  # 天空蓝
@@ -105,10 +98,8 @@ while True:
         elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             pygame.quit()
             quit()
-
     keys = pygame.key.get_pressed()
     camera.move(keys)
-
     # 鼠标旋转
     mx, my = pygame.mouse.get_rel()
     camera.yaw += mx * camera.mouse_sensitivity
@@ -118,7 +109,6 @@ while True:
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
     glLoadIdentity()
     camera.apply()
-
     # 绘制方块世界
     for x in range(world_size[0]):
         for y in range(world_size[1]):
