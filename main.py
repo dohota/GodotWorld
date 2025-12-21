@@ -1,152 +1,96 @@
 import pygame
 from pygame.locals import *
 from OpenGL.GL import *
-from OpenGL.GLU import *
+
+from core.shader import Shader
+from core.camera import Camera
+from world.world import World
 import numpy as np
-import math
-# ---- 世界配置 ----
-world_size = (16, 8, 16)  # x, y, z
-world = np.zeros(world_size, dtype=int)
-world[:, :4, :] = 1  # 地面层填充
-# ---- 方块渲染 ----
-def draw_cube(x, y, z):
-    vertices = [
-        (x, y, z),
-        (x+1, y, z),
-        (x+1, y+1, z),
-        (x, y+1, z),
-        (x, y, z+1),
-        (x+1, y, z+1),
-        (x+1, y+1, z+1),
-        (x, y+1, z+1)
-    ]
-    edges = (
-        (0,1),(1,2),(2,3),(3,0),
-        (4,5),(5,6),(6,7),(7,4),
-        (0,4),(1,5),(2,6),(3,7)
-    )
-    # glBegin(GL_LINES)
-    # for edge in edges:
-    #     for vertex in edge:
-    #         glVertex3fv(vertices[vertex])
-    # glEnd()
-    glBegin(GL_LINES)
-    glColor3f(0.8, 0.8, 0.8)  # 浅灰色
-    for edge in edges:
-        for vertex in edge:
-            glVertex3fv(vertices[vertex])
-    glEnd()
 
-class Camera:
-    def __init__(self, pos, yaw=0, pitch=0):
-        self.pos = np.array(pos, dtype=float)
-        self.yaw = yaw
-        self.pitch = pitch
-        self.speed = 0.2
-        self.mouse_sensitivity = 0.2
-
-    def move(self, keys):
-        direction = np.array([0.0, 0.0, 0.0])
-        rad_yaw = math.radians(self.yaw)
-        forward = np.array([math.sin(rad_yaw), 0, -math.cos(rad_yaw)])
-        right = np.array([math.cos(rad_yaw), 0, math.sin(rad_yaw)])
-
-        if keys[pygame.K_w]:
-            direction += forward
-        if keys[pygame.K_s]:
-            direction -= forward
-        if keys[pygame.K_a]:
-            direction -= right
-        if keys[pygame.K_d]:
-            direction += right
-
-        # 规范化方向向量
-        if np.linalg.norm(direction) != 0:
-            direction = direction / np.linalg.norm(direction)
-
-        # 碰撞检测：简单阻止进入方块
-        new_pos = self.pos + direction * self.speed
-        x, y, z = map(int, new_pos)
-        if 0 <= x < world_size[0] and 0 <= y < world_size[1] and 0 <= z < world_size[2]:
-            if world[x, int(self.pos[1]), z] == 0:  # 只有空地可以移动
-                self.pos = new_pos
-
-    def apply(self):
-        glRotatef(-self.pitch, 1, 0, 0)
-        glRotatef(-self.yaw, 0, 1, 0)
-        glTranslatef(-self.pos[0], -self.pos[1], -self.pos[2])
-# ---- 初始化 Pygame + OpenGL ----
 pygame.init()
 display = (800, 600)
-pygame.display.set_mode(display, DOUBLEBUF|OPENGL)
-gluPerspective(70, (display[0]/display[1]), 0.1, 100.0)
-
-glEnable(GL_DEPTH_TEST)
-glDepthFunc(GL_LEQUAL) # unknown
-pygame.mouse.set_visible(False)
+# --- 新增代码开始 ---
+    # 强制告诉 macOS 使用 OpenGL 3.3 Core Profile
+pygame.display.gl_set_attribute(pygame.GL_CONTEXT_MAJOR_VERSION, 3)
+pygame.display.gl_set_attribute(pygame.GL_CONTEXT_MINOR_VERSION, 3)
+pygame.display.gl_set_attribute(pygame.GL_CONTEXT_PROFILE_MASK, pygame.GL_CONTEXT_PROFILE_CORE)
+pygame.display.gl_set_attribute(pygame.GL_CONTEXT_FORWARD_COMPATIBLE_FLAG, True) # Mac 必须加这句
+# --- 新增代码结束 ---
+    # 开启 Double Buffer 和 OpenGL 上下文
+pygame.display.set_mode(display, DOUBLEBUF | OPENGL)
+    # 捕获鼠标并隐藏
 pygame.event.set_grab(True)
+pygame.mouse.set_visible(False)
+# --- 【新增修复代码】开始 ---
+    # macOS Core Profile 强制要求：必须有一个 VAO 被绑定，否则 Shader 验证会失败
+    # 我们创建一个全局的空 VAO，一直绑着就行
+global_vao = glGenVertexArrays(1)
+glBindVertexArray(global_vao)
+    # --- 【新增修复代码】结束 ---
+# OpenGL 设置
+glEnable(GL_DEPTH_TEST)   # 开启深度测试：让前面的方块遮住后面的方块
+glDepthFunc(GL_LESS)      # 深度测试函数
+glEnable(GL_CULL_FACE)    # 开启背面剔除：不渲染方块的内部面，提升一倍性能
+glCullFace(GL_BACK)       # 剔除背面
+glClearColor(0.5, 0.7, 1.0, 1.0) # 天空蓝背景
+    # 初始化核心组件
+shader = Shader()
+# 稍微离远一点，看全景
+camera = Camera([16, 32, 48], display[0]/display[1]) 
+camera.yaw = -90
+camera.pitch = -30
+world = World()
 
-camera = Camera(pos=(8,6,20), yaw=180, pitch=0)
 clock = pygame.time.Clock()
-while True:
-    dt = clock.tick(60)
-    glClearColor(0.5, 0.7, 1.0, 1.0)  # 天空蓝
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            quit()
-        elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-            pygame.quit()
-            quit()
-    keys = pygame.key.get_pressed()
-    camera.move(keys)
-    # 鼠标旋转
-    mx, my = pygame.mouse.get_rel()
-    camera.yaw += mx * camera.mouse_sensitivity
-    camera.pitch += my * camera.mouse_sensitivity
-    camera.pitch = max(-90, min(90, camera.pitch))
 
-    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
-    glLoadIdentity()
-    camera.apply()
-    # 绘制方块世界
-    for x in range(world_size[0]):
-        for y in range(world_size[1]):
-            for z in range(world_size[2]):
-                if world[x,y,z] != 0:
-                    draw_cube(x, y, z)
+running = True
+while running:
+        # 1. 事件处理
+    dt = clock.tick(60) / 1000.0 # Delta time
+        
+    for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    running = False
+            if event.type == pygame.MOUSEMOTION:
+                x, y = event.rel
+                camera.process_mouse(x, -y)
+
+    keys = pygame.key.get_pressed()
+    input_map = {
+            'W': keys[pygame.K_w],
+            'S': keys[pygame.K_s],
+            'A': keys[pygame.K_a],
+            'D': keys[pygame.K_d]
+        }
+    camera.process_keyboard(input_map)
+
+        # 2. 逻辑更新
+    world.update()
+    # --- 新增调试打印 ---
+    # 每 60 帧打印一次，避免刷屏
+    if pygame.time.get_ticks() % 60 == 0:
+        print(f"Pos: {camera.position}, Yaw: {camera.yaw}, Pitch: {camera.pitch}")
+    # ------------------
+        # 3. 渲染
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        
+    shader.use()
+        
+        # 传递矩阵给 Shader
+    proj = camera.get_projection_matrix()
+    view = camera.get_view_matrix()
+        
+    shader.set_mat4("projection", proj)
+    shader.set_mat4("view", view)
+    
+    world.render(shader)
 
     pygame.display.flip()
 
-# class Manager:
-#     def __init__(self):
-#         pygame.init()
-#         info = pygame.display.Info()
-#         self.width = info.current_w
-#         self.height = info.current_h
-#         self.screen = pygame.display.set_mode((self.width, self.height), pygame.RESIZABLE)
-#         pygame.display.set_caption("Warchess")
-#         self.clock = pygame.time.Clock()
-#         self.running = True
-#         self.font = pygame.font.SysFont("Arial", 24)
-
-#     def update(self):
-#         while self.running:
-#             dt = self.clock.tick(60) / 1000
-#             for event in pygame.event.get():
-#                 if event.type == pygame.QUIT:
-#                     self.running = False
-#                 elif event.type == pygame.VIDEORESIZE:
-#                     self.width, self.height = event.size
-#                     self.screen = pygame.display.set_mode(
-#                         (self.width, self.height),
-#                         pygame.RESIZABLE
-#                     )
-#             #         self.camera.resize(self.width, self.height)
-#             #     self.input.handle_event(event)
-#             # self.world.update(dt)
-#         pygame.quit()
+pygame.quit() 
 
 # if __name__ == "__main__":
-#     m = Manager()
-#     m.update()
+#     main()
