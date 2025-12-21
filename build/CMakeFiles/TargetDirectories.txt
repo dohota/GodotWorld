@@ -1,0 +1,3 @@
+/Users/karl/Documents/programming/c/FirstWorld/build/CMakeFiles/MyWorld.dir
+/Users/karl/Documents/programming/c/FirstWorld/build/CMakeFiles/edit_cache.dir
+/Users/karl/Documents/programming/c/FirstWorld/build/CMakeFiles/rebuild_cache.dir
