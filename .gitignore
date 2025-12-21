@@ -1,0 +1,36 @@
+# === macOS 系统文件 ===
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Thumbnails
+._*
+
+# Icon files
+Icon?
+
+# === Xcode / VS Code 文件 ===
+.vscode/
+*.xcworkspace
+*.xcodeproj
+*.xcuserstate
+
+# === CMake / build 文件 ===
+/build/
+/CMakeFiles/
+/CMakeCache.txt
+cmake_install.cmake
+Makefile
+*.cmake
+*.o
+*.obj
+*.exe
+*.out
+
+# === vcpkg 下载的第三方库 ===
+/vcpkg_installed/
+
+# === 日志 / 临时文件 ===
+*.log
+*.tmp
+*.swp
