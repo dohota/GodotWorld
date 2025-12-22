@@ -9,6 +9,20 @@
 包管理器（可能用vcpkg，也可手动管理），编译器（用clang+llvm，或基于此自己定制）
 尽量锁死c/c++的版本，锁死编译器的类型，版本，不然会出现bug。最好只有引擎版本变
 
+用户点击 Setup.bat
+        ↓
+【准备环境】
+  - 检查 OS / 架构
+  - 检查编译器 / SDK
+  - 下载第三方依赖
+  - 设置环境变量
+        ↓
+【生成构建工具所需文件】
+  - 生成 .sln / .xcodeproj
+  - 或生成 CMake/Bazel 配置
+        ↓
+【结束】
+
 项目架构：
 除了chunk，部分底层渲染之外，基本按照ecs架构
 
@@ -31,8 +45,8 @@ src/main.py：用于启动世界，创建游戏（world）
  ├── world.py        
  ├── ecs.py          # entity / component / system 管理
  ├── chunk_manager.py
- ├── event_bus.py    # （非常推荐）---写事件系统，job system什么的 -->
-
+ ├── event_bus.py    #事件系统，job system什么的 --> 事件总线让系统间只通过“事件”通信，降低依赖
+一个chunk是一个实体，包含很多block。特殊block可被当作实体
  world/
  ├── world.py  # 生命周期 & 总调度
  ├── chunk.py
