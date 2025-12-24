@@ -14,4 +14,11 @@ brew下载了cmake，ninja，vcpkg，然后项目好像就能自动识别了
 
 点击左下角的启动按钮，就能自动启动项目了
 
+项目构思：
+先用sdl2+opengl，然后可以试试加上openal和raknet/boost.asio。再试试换用sdl3/glfw是什么效果（可以仿照minetest的代码）
+接下来再试试用bgfx/filament换掉opengl，然后用the forge来写（性能很好），最后全都自己手写，可以参考sokol库
+构建方面暂定：cmake+ninja+vcpkg，等项目超过十万行再考虑别的
+
+底层和操作系统/硬件打交道的代码用c语言，上层用c++ ecs架构，其中chunk会特殊一点，一堆方块视为一个entity
+
 v1.2:
