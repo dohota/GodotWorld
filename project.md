@@ -1,16 +1,16 @@
-src/main.py：用于启动世界，创建游戏（world）
+src/main.cpp：用于创建窗口，开始游戏（world）
     /world：
-    world.py：管理system，entity，component，管理chunk
-    chunk.py：管理chunk（一大组方块），block（单个方块）
+    world.cpp：管理system，entity，component，管理chunk
+    chunk.c：管理chunk（一大组方块），block（单个方块）
     /core：
-    input.py：输入系统
-    render.py：渲染系统 （含ui绘制）
-    system.py: 移动系统，战斗系统
-    camera.py：
-    shader.py：OpenGL着色器等配置
+    input.c：输入系统
+    render.c：渲染系统 （含ui绘制）
+    system.cpp: 移动系统，战斗系统
+    camera.c：
+    shader.xx：OpenGL着色器等配置
     /gameobject：
-    entity.py：允许增加删除组件，查找组件。用于创造实体（如玩家，掉落物等小东西，不适合创造百万个方块）
-    component.py：实体的组件
+    entity.cpp：允许增加删除组件，查找组件。用于创造实体（如玩家，掉落物等小东西，不适合创造百万个方块）
+    component.c：实体的组件(一般都是结构体)
 
 之后项目再大，可以写成这样：
 <!-- world/
