@@ -1,3 +1,32 @@
+## Code：
+仓库真正存放代码和文件的地方
+#### Issues：
+项目的“问题追踪系统”，是“项目讨论区 + 任务列表”，包括 报告bug，记录待办事项
+#### Pull requests：
+协作开发的核心机制————请求合并，合并到主分支
+#### discussions：
+讨论该项目的使用，体验，提出未来的建议。issues主要用来报告bug，和一些重要的/有潜在风险的功能
+#### Actions：
+自动化流水线系统（CI/CD）————让“机器帮你干重复的活”
+可以自动编译代码，自动跑测试，自动打包，自动发布版本，自动检查代码格式
+#### Projects：
+项目看板 / 任务管理工具。即轻量Jira
+适合规划功能，管理 Issues / PR，小团队项目管理
+和 Issues 的关系：Project 是“宏观管理”，Issues 是“具体事项”
+## Wiki：
+README只是入口介绍
+wiki是项目的详细文档系统，知识库
+#### 我基本上把重要的介绍内容，各个版本的设想全都写入wiki
+用于说明 怎么使用该项目？架构设计是什么？api文档是哪些？开发规范是什么？
+#### Security：
+安全相关功能集合，避免“公开泄露漏洞”
+包含漏洞报告（私下报告安全问题），依赖安全扫描，安全公告（Advisories）
+第三方库有漏洞 → GitHub 提醒你，用户发现安全问题 → 私下通知你
+#### Insights：
+仓库的“数据分析中心”，看项目健康度和活跃度
+#### Settings：
+仓库的控制中心（仅管理员可见）：管理权限，开关 Issues / Wiki / Projects，设置默认分支，设置保护规则（禁止直接 push main），配置 Actions 权限，删除仓库（慎重）
+
 #### 1
 有了vcpkg.json：vcpkg 自动进入 manifest 模式, VS Code + CMake Tools 会自动配合：
 ✅ 不用手动执行 vcpkg install xxx
@@ -16,21 +45,6 @@ vcpkg 所管理的库叫 ports
 brew下载了cmake，ninja，vcpkg，然后项目好像就能自动识别了
 点击左下角的启动按钮，就能自动启动项目了
 
-## google项目代码规范：
-每行代码不过长，尽量避免ascii字符（除了注释）
-预处理，条件编译永远顶格写，不要缩进
-为了让github上的人/自己以后也能看懂自己的代码，所以要写注释
-文件注释：在开头加入版权公告（许可证+版本）
-//todo 表示接下来要做的功能
-//deprecated表示该功能被弃用
-命名空间/文件名/变量/函数参数/数据成员：只用小写字母和下划线
-类/结构体/typedef/枚举/类型模版参数/函数：只用字母，且单词首字母大写
-宏：只用大写字母和下划线 （c++不要像c一样喜欢用宏，尽量用内联函数，枚举，常量代替）
-类成员变量：要以下划线结尾。const类型常量：开头加上k，合理使用const特别好，可以用constexpr。最高级命名空间名字即为项目名称
-几乎别用缺省参数。尽量用函数重载。不用变长数组和allocoa（）。空指针用nullptr
-尽量用 <stdint.h> 里的类型。就算都是正数，也少用无符号整型。空字符用'\0'。auto只用于局部变量
-可以将非成员函数放入某个命名空间里用。只把小于10行的函数定义为内联
-一般都需要头文件保护：防止互相循环调用
 
 ## 项目构思：
 先用sdl2+opengl，然后可以试试加上openal和raknet/boost.asio,ui就使用imgui，物理引擎也可以抄开源的
@@ -51,16 +65,20 @@ src/main.cpp：用于创建窗口，开始游戏（world）
     render.c：渲染系统 （含ui绘制）
     system.cpp: 移动系统，战斗系统
     camera.c：
-    shader.xx：OpenGL着色器等配置
-
-    /gameobject：
+    
+    /game_object：
     entity.cpp：允许增加删除组件，查找组件。用于创造实体（如玩家，掉落物等小东西，不适合创造百万个方块）
     component.c：实体的组件(一般都是结构体)
 
     /util：
-    math.c：有关数学类的
+        ├── math.c 有关数学类的
+        ├── aabb.c
+        ├── raycast.c
+        ├── timer.c
+        ├── config.c 各种全局配置
 
     /core：
+    shader.xx：OpenGL着色器等配置
     # 有关窗口，输入，声音，渲染的底层库，之后这里可以放sokol文件
 
 ### 之后项目再大，可以写成这样：
@@ -97,29 +115,21 @@ gameobject/
  │   └── camera.py
 
 systems/
- ├── input_system.py
- ├── movement_system.py
- ├── collision_system.py
- ├── gravity_system.py
- ├── combat_system.py
- ├── pickup_system.py
-
-render/
- ├── renderer.py
- ├── camera.py
- ├── chunk_renderer.py
- ├── mesh_builder.py
- ├── block_texture_atlas.py
- ├── entity_renderer.py
- ├── ui_renderer.py
- └── debug_draw.py
-
-utils/
- ├── math.py
- ├── aabb.py
- ├── raycast.py
- ├── timer.py
- ├── config.py //各种全局配置
+    render_system/
+        ├── renderer.py
+        ├── camera.py
+        ├── chunk_renderer.py
+        ├── mesh_builder.py
+        ├── block_texture_atlas.py
+        ├── entity_renderer.py
+        ├── ui_renderer.py
+        └── debug_draw.py
+    ├── input_system.py
+    ├── movement_system.py
+    ├── collision_system.py
+    ├── gravity_system.py
+    ├── combat_system.py
+    ├── pickup_system.py
 
 core/
  ├── input.py
